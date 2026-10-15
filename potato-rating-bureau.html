@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Potato Rating Bureau — Variety Guide</title>
+<style>
+  :root {
+    --paper: #f5f2ea;
+    --ink: #1c1c1a;
+    --muted: #6b6a62;
+    --rule: #cfcabb;
+    --accent: #9a3b1e;
+    --tint: #ebe5d3;
+  }
+  * { box-sizing: border-box; border-radius: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0; background: var(--paper); color: var(--ink);
+    font-family: Georgia, "Times New Roman", serif; line-height: 1.55;
+  }
+  .mono { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; }
+  a { color: inherit; }
+  .wrap { max-width: 1040px; margin: 0 auto; padding: 0 24px; }
+
+  /* masthead */
+  .mast { border-bottom: 3px double var(--ink); }
+  .mast .wrap { display: flex; justify-content: space-between; align-items: baseline; padding-top: 14px; padding-bottom: 12px; gap: 16px; flex-wrap: wrap; }
+  .mast .name { font-size: .78rem; letter-spacing: .14em; text-transform: uppercase; font-weight: 700; }
+  .mast nav a { font-size: .78rem; margin-left: 22px; text-decoration: none; letter-spacing: .06em; text-transform: uppercase; }
+  .mast nav a:hover { color: var(--accent); text-decoration: underline; }
+
+  /* intro */
+  .intro { padding: 56px 0 40px; border-bottom: 1px solid var(--ink); }
+  .intro .wrap { display: grid; grid-template-columns: 1.4fr 1fr; gap: 48px; align-items: end; }
+  .kicker { font-size: .75rem; letter-spacing: .14em; text-transform: uppercase; color: var(--accent); margin-bottom: 14px; }
+  h1 { font-size: clamp(2.2rem, 5vw, 3.8rem); line-height: 1.04; margin: 0; font-weight: 700; letter-spacing: -.02em; }
+  .intro p { margin: 0; color: var(--muted); font-size: 1rem; }
+
+  section { padding: 44px 0; border-bottom: 1px solid var(--rule); }
+  .sec-head { display: flex; gap: 20px; align-items: baseline; margin-bottom: 24px; }
+  .sec-num { font-size: .78rem; color: var(--accent); }
+  h2 { font-size: 1.55rem; margin: 0; letter-spacing: -.01em; }
+  .sec-sub { color: var(--muted); font-size: .92rem; margin: 6px 0 0; max-width: 640px; }
+
+  /* controls */
+  .picker { display: flex; flex-wrap: wrap; gap: 0; border: 1px solid var(--ink); width: fit-content; margin-bottom: 22px; }
+  .picker button {
+    background: transparent; color: var(--ink); border: 0; border-right: 1px solid var(--ink);
+    padding: 10px 18px; font: inherit; font-size: .85rem; cursor: pointer;
+  }
+  .picker button:last-child { border-right: 0; }
+  .picker button:hover { background: var(--tint); }
+  .picker button[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
+  .picker button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible, .btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  .recommend { border-left: 4px solid var(--accent); padding: 4px 0 4px 18px; margin-bottom: 26px; max-width: 700px; }
+  .recommend .label { font-size: .72rem; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+  .recommend .pick { font-size: 1.5rem; font-weight: 700; margin: 2px 0; }
+  .recommend p { margin: 0; color: var(--muted); font-size: .95rem; }
+
+  /* table */
+  .tbl-wrap { overflow-x: auto; border-top: 2px solid var(--ink); border-bottom: 2px solid var(--ink); }
+  table { width: 100%; border-collapse: collapse; font-size: .9rem; min-width: 760px; }
+  th, td { padding: 11px 12px; text-align: left; border-bottom: 1px solid var(--rule); vertical-align: top; }
+  tbody tr:last-child td { border-bottom: 0; }
+  th { font-size: .7rem; letter-spacing: .1em; text-transform: uppercase; font-weight: 700; color: var(--muted); border-bottom: 1px solid var(--ink); }
+  th.num, td.num { text-align: center; width: 64px; font-family: ui-monospace, Menlo, Consolas, monospace; }
+  td.var { font-weight: 700; }
+  td.var small { display: block; font-weight: 400; color: var(--muted); font-size: .8rem; }
+  td.cls { white-space: nowrap; }
+  .hl { background: var(--tint); }
+  .score { display: inline-block; min-width: 1.6em; }
+  .score.top { color: var(--accent); font-weight: 700; }
+  .score.low { color: #a9a597; }
+  .legend { font-size: .8rem; color: var(--muted); margin-top: 12px; }
+
+  /* log */
+  .log-grid { display: grid; grid-template-columns: 340px 1fr; gap: 48px; }
+  form label { display: block; font-size: .72rem; letter-spacing: .1em; text-transform: uppercase; margin: 16px 0 6px; font-weight: 700; }
+  form label:first-child { margin-top: 0; }
+  input, select, textarea {
+    width: 100%; font: inherit; font-size: .95rem; padding: 9px 10px;
+    border: 1px solid var(--ink); background: #fffdf7; color: var(--ink);
+  }
+  textarea { min-height: 76px; resize: vertical; }
+  .btn { display: inline-block; margin-top: 18px; background: var(--ink); color: var(--paper); border: 1px solid var(--ink); padding: 10px 20px; font: inherit; font-size: .85rem; cursor: pointer; letter-spacing: .04em; }
+  .btn:hover { background: var(--accent); border-color: var(--accent); }
+  .btn.ghost { background: transparent; color: var(--ink); }
+  .btn.ghost:hover { background: var(--tint); color: var(--ink); border-color: var(--ink); }
+  .entries { border-top: 2px solid var(--ink); }
+  .entry { display: grid; grid-template-columns: 90px 1fr auto; gap: 16px; padding: 14px 0; border-bottom: 1px solid var(--rule); }
+  .entry .date { font-size: .78rem; color: var(--muted); }
+  .entry .what { font-weight: 700; }
+  .entry .what span { font-weight: 400; color: var(--muted); font-size: .88rem; }
+  .entry .notes { margin: 3px 0 0; font-size: .9rem; color: var(--muted); }
+  .entry .rating { font-size: 1.1rem; font-weight: 700; }
+  .entry button { background: none; border: 0; padding: 0; margin-left: 10px; color: var(--muted); font-size: .75rem; text-decoration: underline; cursor: pointer; font-family: inherit; }
+  .entry button:hover { color: var(--accent); }
+  .empty { padding: 22px 0; color: var(--muted); font-size: .92rem; border-bottom: 1px solid var(--rule); }
+  .log-summary { font-size: .8rem; color: var(--muted); margin: 12px 0 0; }
+
+  /* method */
+  .method { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; border-top: 2px solid var(--ink); }
+  .method div { padding: 18px 22px 18px 0; border-right: 1px solid var(--rule); margin-right: 22px; }
+  .method div:last-child { border-right: 0; margin-right: 0; }
+  .method h3 { font-size: .78rem; letter-spacing: .1em; text-transform: uppercase; margin: 0 0 8px; }
+  .method p { margin: 0; font-size: .92rem; color: var(--muted); }
+
+  footer { padding: 26px 0 40px; font-size: .78rem; color: var(--muted); }
+  footer .wrap { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+
+  @media (max-width: 760px) {
+    .intro .wrap, .log-grid, .method { grid-template-columns: 1fr; gap: 28px; }
+    .method div { border-right: 0; margin-right: 0; border-bottom: 1px solid var(--rule); padding-right: 0; }
+    .method div:last-child { border-bottom: 0; }
+    .entry { grid-template-columns: 1fr auto; }
+    .entry .date { grid-column: 1 / -1; }
+  }
+</style>
+</head>
+<body>
+
+<div class="mast">
+  <div class="wrap">
+    <div class="name mono">Potato Rating Bureau &nbsp;/&nbsp; Variety Guide</div>
+    <nav aria-label="Main">
+      <a href="#guide">Guide</a>
+      <a href="#log">Tasting log</a>
+      <a href="#method">Method</a>
+    </nav>
+  </div>
+</div>
+
+<header class="intro">
+  <div class="wrap">
+    <div>
+      <div class="kicker mono">Reference &middot; 8 varieties &middot; 6 cooking methods</div>
+      <h1>The right potato for the job.</h1>
+    </div>
+    <p>Most bad mash, soggy fries and collapsed potato salad come down to one mistake: using the wrong variety. Pick what you are cooking and see which potatoes hold up, then keep notes on what you actually tried.</p>
+  </div>
+</header>
+
+<main>
+  <section id="guide">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="sec-num mono">01</span>
+        <div>
+          <h2>What are you making?</h2>
+          <p class="sec-sub">Select a method. The table re-sorts by how well each variety performs at it.</p>
+        </div>
+      </div>
+
+      <div class="picker" id="picker" role="group" aria-label="Cooking method"></div>
+
+      <div class="recommend" id="recommend" aria-live="polite"></div>
+
+      <div class="tbl-wrap">
+        <table>
+          <thead id="thead"></thead>
+          <tbody id="tbody"></tbody>
+        </table>
+      </div>
+      <p class="legend mono">Scores 1&ndash;5, where 5 is best suited. Starch is a general tendency; it varies by season, storage and growing region.</p>
+    </div>
+  </section>
+
+  <section id="log">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="sec-num mono">02</span>
+        <div>
+          <h2>Tasting log</h2>
+          <p class="sec-sub">Record what you cooked and how it turned out. Entries are saved in this browser only.</p>
+        </div>
+      </div>
+
+      <div class="log-grid">
+        <form id="log-form">
+          <label for="f-variety">Variety</label>
+          <select id="f-variety" required></select>
+
+          <label for="f-method">Cooked as</label>
+          <select id="f-method" required></select>
+
+          <label for="f-score">Result (1&ndash;5)</label>
+          <select id="f-score" required>
+            <option value="5">5 &mdash; exactly right</option>
+            <option value="4">4 &mdash; good</option>
+            <option value="3" selected>3 &mdash; acceptable</option>
+            <option value="2">2 &mdash; disappointing</option>
+            <option value="1">1 &mdash; wrong potato</option>
+          </select>
+
+          <label for="f-notes">Notes</label>
+          <textarea id="f-notes" maxlength="200" placeholder="Texture, cook time, what you would change"></textarea>
+
+          <button class="btn" type="submit">Add entry</button>
+        </form>
+
+        <div>
+          <div class="entries" id="entries"></div>
+          <p class="log-summary mono" id="log-summary"></p>
+          <button class="btn ghost" id="export" type="button" style="margin-top:14px">Export CSV</button>
+          <button class="btn ghost" id="clear" type="button" style="margin-top:14px">Clear log</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="method">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="sec-num mono">03</span>
+        <h2>How to read this</h2>
+      </div>
+      <div class="method">
+        <div>
+          <h3>Starchy</h3>
+          <p>Dry and fluffy when cooked. They fall apart in water but give crisp fries and light baked potatoes.</p>
+        </div>
+        <div>
+          <h3>All-purpose</h3>
+          <p>Medium starch. Creamy enough to mash and firm enough to roast. The safe choice when you are unsure.</p>
+        </div>
+        <div>
+          <h3>Waxy</h3>
+          <p>Low starch, high moisture. They keep their shape when boiled, which suits salads and gratins.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span class="mono">&copy; 2026 Potato Rating Bureau</span>
+    <span>Ratings are editorial guidance based on general culinary consensus, not lab measurements.</span>
+  </div>
+</footer>
+
+<script>
+  const METHODS = [
+    { key: "bake",  label: "Baked" },
+    { key: "mash",  label: "Mashed" },
+    { key: "roast", label: "Roasted" },
+    { key: "fry",   label: "Fries" },
+    { key: "boil",  label: "Boiled" },
+    { key: "salad", label: "Salad" }
+  ];
+
+  const POTATOES = [
+    { name: "Russet",        note: "Idaho / baking potato", cls: "Starchy",     starch: "High",   bake: 5, mash: 4, roast: 3, fry: 5, boil: 1, salad: 1,
+      why: "Dry, floury flesh bakes light and fries crisp. Avoid boiling; it breaks down." },
+    { name: "Maris Piper",   note: "UK staple",              cls: "Starchy",     starch: "High",   bake: 4, mash: 5, roast: 5, fry: 5, boil: 2, salad: 1,
+      why: "Fluffy interior and a good crust. The default for roasts and chips in the UK." },
+    { name: "Kennebec",      note: "Long-storing white",     cls: "All-purpose", starch: "Medium", bake: 4, mash: 3, roast: 4, fry: 5, boil: 3, salad: 2,
+      why: "Low sugar, so fries stay pale gold instead of browning too fast." },
+    { name: "Yukon Gold",    note: "Yellow-fleshed",         cls: "All-purpose", starch: "Medium", bake: 3, mash: 5, roast: 5, fry: 3, boil: 4, salad: 3,
+      why: "Buttery and creamy. Holds together when boiled yet mashes smooth." },
+    { name: "Purple Majesty",note: "Purple flesh",           cls: "All-purpose", starch: "Medium", bake: 4, mash: 3, roast: 4, fry: 3, boil: 3, salad: 3,
+      why: "Dense and slightly sweet. Colour fades if boiled long; roasting keeps it vivid." },
+    { name: "Red Bliss",     note: "Red-skinned",            cls: "Waxy",        starch: "Low",    bake: 1, mash: 2, roast: 4, fry: 2, boil: 5, salad: 5,
+      why: "Firm, moist flesh that stays intact after boiling and slicing." },
+    { name: "Fingerling",    note: "Small, elongated",       cls: "Waxy",        starch: "Low",    bake: 2, mash: 2, roast: 5, fry: 2, boil: 4, salad: 5,
+      why: "Thin skin, no peeling needed. Roast whole or halve for salads." },
+    { name: "Russian Banana",note: "Heirloom fingerling",    cls: "Waxy",        starch: "Low",    bake: 2, mash: 2, roast: 4, fry: 2, boil: 4, salad: 5,
+      why: "Nutty and smooth. Slices cleanly for warm salads." }
+  ];
+
+  let current = "mash";
+
+  const picker = document.getElementById("picker");
+  const thead = document.getElementById("thead");
+  const tbody = document.getElementById("tbody");
+  const recommend = document.getElementById("recommend");
+
+  function buildPicker() {
+    METHODS.forEach(m => {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.textContent = m.label;
+      b.dataset.key = m.key;
+      b.addEventListener("click", () => { current = m.key; render(); });
+      picker.appendChild(b);
+    });
+  }
+
+  function scoreCell(v, isCurrent) {
+    const cls = v === 5 ? "score top" : v <= 2 ? "score low" : "score";
+    return `<td class="num ${isCurrent ? "hl" : ""}"><span class="${cls}">${v}</span></td>`;
+  }
+
+  function render() {
+    [...picker.children].forEach(b => b.setAttribute("aria-pressed", String(b.dataset.key === current)));
+
+    thead.innerHTML = "<tr><th>Variety</th><th>Class</th><th>Starch</th>" +
+      METHODS.map(m => `<th class="num ${m.key === current ? "hl" : ""}">${m.label}</th>`).join("") +
+      "</tr>";
+
+    const sorted = [...POTATOES].sort((a, b) => b[current] - a[current] || a.name.localeCompare(b.name));
+    tbody.innerHTML = sorted.map(p =>
+      `<tr><td class="var">${p.name}<small>${p.note}</small></td>` +
+      `<td class="cls">${p.cls}</td><td class="cls">${p.starch}</td>` +
+      METHODS.map(m => scoreCell(p[m.key], m.key === current)).join("") + "</tr>"
+    ).join("");
+
+    const best = sorted[0];
+    const label = METHODS.find(m => m.key === current).label.toLowerCase();
+    const ties = sorted.filter(p => p[current] === best[current]).length;
+    recommend.innerHTML =
+      `<div class="label mono">Best for ${label}</div>` +
+      `<div class="pick">${best.name}</div>` +
+      `<p>${best.why}${ties > 1 ? ` ${ties - 1} other variet${ties > 2 ? "ies" : "y"} score equally; see the table.` : ""}</p>`;
+  }
+
+  /* tasting log */
+  const KEY = "potato-bureau-log-v1";
+  const fv = document.getElementById("f-variety");
+  const fm = document.getElementById("f-method");
+  POTATOES.forEach(p => fv.add(new Option(p.name, p.name)));
+  METHODS.forEach(m => fm.add(new Option(m.label, m.label)));
+
+  function load() { try { return JSON.parse(localStorage.getItem(KEY)) || []; } catch (e) { return memory; } }
+  function save(list) { memory = list; try { localStorage.setItem(KEY, JSON.stringify(list)); } catch (e) {} }
+  let memory = [];
+
+  function esc(s) { const d = document.createElement("div"); d.textContent = s; return d.innerHTML; }
+
+  function renderLog() {
+    const list = load();
+    const box = document.getElementById("entries");
+    const sum = document.getElementById("log-summary");
+    if (!list.length) {
+      box.innerHTML = `<div class="empty">No entries yet. Cook something and log it.</div>`;
+      sum.textContent = "";
+      return;
+    }
+    box.innerHTML = list.map((e, i) =>
+      `<div class="entry">
+        <div class="date mono">${esc(e.date)}</div>
+        <div><div class="what">${esc(e.variety)} <span>&middot; ${esc(e.method)}</span></div>
+          ${e.notes ? `<p class="notes">${esc(e.notes)}</p>` : ""}</div>
+        <div><span class="rating mono">${e.score}/5</span><button type="button" data-i="${i}" aria-label="Delete entry">remove</button></div>
+      </div>`).join("");
+    const avg = (list.reduce((a, e) => a + e.score, 0) / list.length).toFixed(1);
+    sum.textContent = `${list.length} entr${list.length === 1 ? "y" : "ies"} \u00b7 average result ${avg}/5`;
+  }
+
+  document.getElementById("log-form").addEventListener("submit", ev => {
+    ev.preventDefault();
+    const list = load();
+    list.unshift({
+      date: new Date().toISOString().slice(0, 10),
+      variety: fv.value, method: fm.value,
+      score: Number(document.getElementById("f-score").value),
+      notes: document.getElementById("f-notes").value.trim()
+    });
+    save(list);
+    document.getElementById("f-notes").value = "";
+    renderLog();
+  });
+
+  document.getElementById("entries").addEventListener("click", ev => {
+    const i = ev.target.dataset && ev.target.dataset.i;
+    if (i === undefined) return;
+    const list = load(); list.splice(Number(i), 1); save(list); renderLog();
+  });
+
+  document.getElementById("clear").addEventListener("click", () => {
+    if (load().length && confirm("Delete all log entries?")) { save([]); renderLog(); }
+  });
+
+  document.getElementById("export").addEventListener("click", () => {
+    const list = load();
+    if (!list.length) return;
+    const q = s => `"${String(s).replace(/"/g, '""')}"`;
+    const csv = "date,variety,method,score,notes\n" +
+      list.map(e => [e.date, e.variety, e.method, e.score, q(e.notes)].join(",")).join("\n");
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv" }));
+    a.download = "potato-tasting-log.csv";
+    a.click();
+  });
+
+  buildPicker();
+  render();
+  renderLog();
+</script>
+</body>
+</html>
